@@ -1,3 +1,3 @@
-# treefmt-configs
+# nix-dev-toolkit
 
-Contains treefmt configs, that I want to use in every project
+Contains formatters, checks and pre-hooks for nix
