@@ -54,16 +54,40 @@
         }
       );
 
+      mkLogicCheck =
+        {
+          system,
+          nixpkgs,
+          module,
+          config,
+        }:
+        (nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = [
+            module
+            {
+              # THE DEFAULT BOILERPLATE
+              config.fileSystems."/".device = "/dev/dummy";
+              config.boot.loader.grub.enable = false;
+              config.system.stateVersion = "25.05";
+            }
+            config
+          ];
+        }).config.system.build.toplevel;
+
     in
     {
       # for `nix fmt`
       formatter = eachSystem (pkgs: treefmtEval.${pkgs.system}.config.build.wrapper);
       # for `nix flake check`
+
       checks = eachSystem (pkgs: {
         formatting = treefmtEval.${pkgs.system}.config.build.check self;
         # Include pre-commit check in flake check
         pre-commit-check = preCommitOutputs.${pkgs.system}.pre-commit-check;
       });
+
+      lib.mkLogicCheck = mkLogicCheck;
 
       devShells = eachSystem (pkgs: {
         default = nixpkgs.legacyPackages.${pkgs.system}.mkShell {
