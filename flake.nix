@@ -3,7 +3,7 @@
 
   inputs = {
     treefmt-nix.url = "github:numtide/treefmt-nix";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     systems.url = "github:nix-systems/default";
     pre-commit-hooks.url = "github:cachix/git-hooks.nix";
   };
@@ -36,7 +36,7 @@
       preCommitOutputs = eachSystem (
         pkgs:
         let
-          preCommitCheck = pre-commit-hooks.lib.${pkgs.system}.run {
+          preCommitCheck = pre-commit-hooks.lib.${pkgs.stdenv.hostPlatform.system}.run {
             src = ./.;
             hooks = {
               nixfmt.enable = true;
@@ -78,22 +78,22 @@
     in
     {
       # for `nix fmt`
-      formatter = eachSystem (pkgs: treefmtEval.${pkgs.system}.config.build.wrapper);
+      formatter = eachSystem (pkgs: treefmtEval.${pkgs.stdenv.hostPlatform.system}.config.build.wrapper);
       # for `nix flake check`
 
       checks = eachSystem (pkgs: {
-        formatting = treefmtEval.${pkgs.system}.config.build.check self;
+        formatting = treefmtEval.${pkgs.stdenv.hostPlatform.system}.config.build.check self;
         # Include pre-commit check in flake check
-        pre-commit-check = preCommitOutputs.${pkgs.system}.pre-commit-check;
+        pre-commit-check = preCommitOutputs.${pkgs.stdenv.hostPlatform.system}.pre-commit-check;
       });
 
       lib.mkLogicCheck = mkLogicCheck;
 
       devShells = eachSystem (pkgs: {
-        default = nixpkgs.legacyPackages.${pkgs.system}.mkShell {
+        default = nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.mkShell {
           # Inherit the shell hook and dependencies from the common 'let' block
-          inherit (preCommitOutputs.${pkgs.system}) shellHook;
-          buildInputs = preCommitOutputs.${pkgs.system}.enabledPackages;
+          inherit (preCommitOutputs.${pkgs.stdenv.hostPlatform.system}) shellHook;
+          buildInputs = preCommitOutputs.${pkgs.stdenv.hostPlatform.system}.enabledPackages;
         };
       });
 
